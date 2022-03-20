@@ -179,3 +179,11 @@ API
 Training
 Blog
 About
+
+# qt 
+.qt_for_python
+
+# sqlite3
+*.db
+
+MYTODO.txt

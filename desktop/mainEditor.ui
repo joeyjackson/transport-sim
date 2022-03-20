@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>467</width>
+    <height>347</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout_2">
+    <item row="1" column="0">
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="modelTab">
+       <attribute name="title">
+        <string>Models</string>
+       </attribute>
+       <layout class="QGridLayout" name="gridLayout">
+        <item row="0" column="0" colspan="3">
+         <widget class="QTableView" name="modelTableView"/>
+        </item>
+        <item row="1" column="2">
+         <widget class="QPushButton" name="modelAddBtn">
+          <property name="text">
+           <string>Add Row</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QPushButton" name="modelClearBtn">
+          <property name="text">
+           <string>Clear Changes</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QPushButton" name="modelSaveBtn">
+          <property name="text">
+           <string>Save Changes</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="vehicleTab">
+       <attribute name="title">
+        <string>Vehicles</string>
+       </attribute>
+       <layout class="QGridLayout" name="gridLayout_3">
+        <item row="1" column="1">
+         <widget class="QPushButton" name="vehicleBtn">
+          <property name="text">
+           <string>PushButton</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0" colspan="2">
+         <widget class="QTableView" name="vehicleTableView"/>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+    <item row="0" column="0">
+     <widget class="QLabel" name="err_label">
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
