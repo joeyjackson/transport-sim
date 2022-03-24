@@ -1,6 +1,6 @@
 import sqlite3
 import os
-from typing import Optional, List
+from typing import Iterable, Optional, List
 import logging
 import argparse
 import textwrap
@@ -40,11 +40,14 @@ def close_db_connection() -> None:
     connection = None
 
 
-def query(q: str) -> sqlite3.Cursor:
-  connection = connect_to_db()
-  _query = textwrap.dedent(q).strip()
-  logger.debug('Executing query: %s', _query)
-  return connection.execute(_query) 
+def query(q: str, params: Iterable = []) -> sqlite3.Cursor:
+  try:
+    connection = connect_to_db()
+    _query = textwrap.dedent(q).strip()
+    logger.debug('Executing query: %s %s', _query, params)
+    return connection.execute(_query, params)
+  except Exception as e:
+    raise Exception('Error executing query: {} {}\ncaused by: {}'.format(q, params, e)) from e
 
 
 class ColumnDefinition():

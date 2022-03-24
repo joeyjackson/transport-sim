@@ -29,12 +29,11 @@ class FkColumnDelegate(QStyledItemDelegate):
   def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex) -> QWidget:
     data = index.data(Qt.EditRole)
     if isinstance(data, FkTableModelColumn):
-      to_query = [data.schema.column_name] + data.schema.fk_options.display_columns + [x.column_name for x in data.schema.fk_options.additional_columns]
+      to_query = [data.schema.column_name] + data.schema.fk_options.display_columns + [x.column_name for x in data.schema.fk_options.auxiliary_columns]
       query_results = query(f"""SELECT {", ".join(to_query)} FROM {data.schema.fk_options.reference_table} ORDER BY {data.schema.column_name};""")
       options = [list(row) for row in query_results]
 
       editor = FkColumnDelegateComboBox(options, data.schema, parent)
-      # editor.editingFinished.connect(self.commitAndCloseEditor)
       return editor
     else:
       return super(FkColumnDelegate, self).createEditor(parent, option, index)
@@ -55,8 +54,3 @@ class FkColumnDelegate(QStyledItemDelegate):
 
   def updateEditorGeometry(self, editor, option, index):
     editor.setGeometry(option.rect)
-
-  # def commitAndCloseEditor(self):
-  #   editor = self.sender()
-  #   self.commitData.emit(editor)
-  #   self.closeEditor.emit(editor)
