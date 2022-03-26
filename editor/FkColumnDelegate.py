@@ -1,9 +1,41 @@
 from PyQt5.QtCore import Qt, QModelIndex, QAbstractItemModel
 from PyQt5.QtWidgets import QStyledItemDelegate, QWidget, QStyleOptionViewItem, QComboBox
-from PyQt5.QtGui import QPainter
-from FkTableModel import FkTableModelColumn, DisplaySchemaColumn
+from FkTableModel import FkTableModelColumn, DisplaySchemaColumn, DeleteButtonColumn
 from db import query
 from typing import List, Union
+from PyQt5.QtWidgets import QPushButton
+from PyQt5.QtCore import Qt
+
+class DeleteButtonDelegate(QStyledItemDelegate):
+  def __init__(self, parent=None, *args):
+    QStyledItemDelegate.__init__(self, parent, *args)
+
+  def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex) -> QWidget:
+    data = index.data(Qt.EditRole)
+    if isinstance(data, DeleteButtonColumn):
+      btn = QPushButton("Delete", parent)
+      #self.connect(combo, QtCore.SIGNAL("currentIndexChanged(int)"), self, QtCore.SLOT("currentIndexChanged()"))
+      btn.clicked.connect(self.currentIndexChanged)
+      return btn
+    else:
+      return super(DeleteButtonDelegate, self).createEditor(parent, option, index)
+
+  def setEditorData(self, editor: QWidget, index: QModelIndex) -> None:
+    data = index.data(Qt.EditRole)
+    if isinstance(data, DeleteButtonColumn):
+      pass
+    else:
+      super(DeleteButtonDelegate, self).setEditorData(editor, index)
+      
+  def setModelData(self, editor: QWidget, model: QAbstractItemModel, index: QModelIndex) -> None:
+    data = index.data(Qt.EditRole)
+    if isinstance(data, DeleteButtonColumn):
+      model.setData(index, True, Qt.EditRole)
+    else:
+      super(DeleteButtonDelegate, self).setModelData(editor, model, index)
+      
+  def currentIndexChanged(self):
+    self.commitData.emit(self.sender())
 
 
 class FkColumnDelegateComboBox(QComboBox):
@@ -22,9 +54,9 @@ class FkColumnDelegateComboBox(QComboBox):
   def currentOption(self) -> List[Union[str, int, float]]:
     return self.options[self.currentIndex()]
 
-class FkColumnDelegate(QStyledItemDelegate):
+class FkColumnDelegate(DeleteButtonDelegate):
   def __init__(self, parent=None, *args):
-    QStyledItemDelegate.__init__(self, parent, *args)
+    DeleteButtonDelegate.__init__(self, parent, *args)
 
   def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex) -> QWidget:
     data = index.data(Qt.EditRole)

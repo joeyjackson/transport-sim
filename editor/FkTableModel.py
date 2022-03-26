@@ -36,6 +36,11 @@ class ForeignKeySpecification:
     self.auxiliary_columns = auxiliary_columns
 
 
+class DeleteButtonColumn:
+  def __init__(self):
+    pass
+
+
 class FkTableModelColumn:
   def __init__(self, id_value: int, schema: ForeignKeySpecification):
     self.id_value = id_value
@@ -43,11 +48,12 @@ class FkTableModelColumn:
 
 
 class DisplaySchemaColumn:
-  def __init__(self, column_name: str, header: str, default_value: Union[str, int, float], fk_options: Optional[ForeignKeySpecification] = None) -> None:
+  def __init__(self, column_name: str, header: str, default_value: Union[str, int, float], fk_options: Optional[ForeignKeySpecification] = None, isDeleteBtn: bool = False) -> None:
     self.column_name = column_name
     self.header = header
     self.fk_options = fk_options
     self.default_value = default_value
+    self.isDeleteBtn = isDeleteBtn
 
   def is_fk(self) -> bool:
     return self.fk_options is not None
@@ -63,17 +69,18 @@ class FkTableModel(QAbstractTableModel):
   def __init__(self, table_name: str, schema: List[DisplaySchemaColumn], onError: Callable[[str], None], clearError: Callable[[], None], parent=None, *args):
     QAbstractTableModel.__init__(self, parent, *args)
     self.table_name = table_name
-    self._schema = schema
+    self._schema = schema + [DisplaySchemaColumn("Delete", "Delete", DeleteButtonColumn(), None, True)]
     self.onError = onError
     self.clearError = clearError
     self._query_rows = []
     self._joins = set()
     self._query_rows_to_schema = []
-    for i, col in enumerate(schema):
-      self._query_rows.append(col.column_name)
-      self._query_rows_to_schema.append(i)
+    for i, col in enumerate(self._schema):
+      if not col.isDeleteBtn:
+        self._query_rows.append(col.column_name)
+        self._query_rows_to_schema.append(i)
       if col.is_fk():
-        self._joins.add(f"JOIN {col.fk_options.reference_table} ON {col.fk_options.join_on}")
+        self._joins.add(f"LEFT JOIN {col.fk_options.reference_table} ON {col.fk_options.join_on}")
         for display_column in col.fk_options.display_columns:
           self._query_rows.append(display_column)
           self._query_rows_to_schema.append(i)
@@ -85,7 +92,7 @@ class FkTableModel(QAbstractTableModel):
     self._uneditable_columns.add(0)
     self._displayed_columns_to_schema = [] # [(schema_index, schema_auxiliary_column_index), ...]
 
-    for i, col in enumerate(schema):
+    for i, col in enumerate(self._schema):
       self._displayed_columns_to_schema.append((i, None))
       if col.is_fk() and len(col.fk_options.auxiliary_columns) > 0:
         for a in range(len(col.fk_options.auxiliary_columns)):
@@ -114,6 +121,7 @@ class FkTableModel(QAbstractTableModel):
           curr_schema_col += 1
           col_results = [column]
       row_result.append(col_results)
+      row_result.append([DeleteButtonColumn()])
       self._local_data.append(row_result)
     self.endResetModel()
 
@@ -137,12 +145,12 @@ class FkTableModel(QAbstractTableModel):
       old = deepcopy(self._local_data[r][c])
     
     schema_column_index, _ = self._displayed_columns_to_schema[c]
-    if isinstance(value, list):
+    if self._schema[schema_column_index].isDeleteBtn:
+      self._changed_row[r] ^= ChangedState.DELETED
+    else: 
       self._local_data[r][schema_column_index] = value
-    else:
-      self._local_data[r][schema_column_index][0] = value
     
-    if old is None or old != value:
+    if (old is None or old != value) and not self._schema[schema_column_index].isDeleteBtn:
       self._changed[r][c] |= ChangedState.UPDATED 
       self._changed_row[r] |= ChangedState.UPDATED 
     self.clearError()
@@ -169,8 +177,9 @@ class FkTableModel(QAbstractTableModel):
     self.clearError()
 
   def _delete_statement_for_row(self, row: List[List[Union[str, float, int]]]) -> Tuple[str, List[List[Union[str, float, int]]]]:
-    # TODO
-    return ""
+    id_name = self._schema[0].column_name
+    id_value = row[0][0]
+    return f"""DELETE FROM {self.table_name} WHERE {id_name} = ?;""", [id_value]
 
   def _insert_statement_for_row(self, row: List[List[Union[str, float, int]]]) -> Tuple[str, List[List[Union[str, float, int]]]]:
     col_names = []
@@ -250,12 +259,10 @@ class FkTableModel(QAbstractTableModel):
       return QVariant()
     if role == Qt.DisplayRole or role == Qt.EditRole:
       schema_column_index, aux_column_index = self._displayed_columns_to_schema[index.column()]
-      raw_data = self._local_data[index.row()][schema_column_index]
-
       schema_column = self._schema[schema_column_index]
-      if not schema_column.is_fk():
-        return QVariant(raw_data[0])
-      else:
+
+      raw_data = self._local_data[index.row()][schema_column_index]
+      if schema_column.is_fk():
         if aux_column_index is not None:
           return QVariant(raw_data[1 + len(schema_column.fk_options.display_columns) + aux_column_index])
         else:
@@ -265,14 +272,27 @@ class FkTableModel(QAbstractTableModel):
             return QVariant(formatted)
           elif role == Qt.EditRole:
             return QVariant(FkTableModelColumn(raw_data[0], schema_column))
+      elif schema_column.isDeleteBtn:
+        if role == Qt.DisplayRole:
+          return QVariant("Delete")
+        elif role == Qt.EditRole:
+          return QVariant(raw_data[0])
+      else:
+        return QVariant(raw_data[0])
 
     if role == Qt.BackgroundRole:
       schema_column_index, _ = self._displayed_columns_to_schema[index.column()]
+      deleted_row = self._changed_row[index.row()] & ChangedState.DELETED
       created_row = self._changed_row[index.row()] & ChangedState.CREATED
       updated = self._changed[index.row()][schema_column_index] & ChangedState.UPDATED
       uneditable = index.column() in self._uneditable_columns
 
-      if created_row:
+      if deleted_row:
+        if uneditable:
+          return QVariant(QBrush(QColor(0xbc, 0x54, 0x4b)))
+        else:
+          return QVariant(QBrush(QColor(0xff, 0x00, 0x00)))
+      elif created_row:
         if uneditable:
           return QVariant(QBrush(QColor(0x3d, 0xed, 0x97)))
         else:

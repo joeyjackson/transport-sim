@@ -53,10 +53,10 @@ class MainWindow(QMainWindow, Ui_Interface):
     self.modelTableView.setModel(self.modelModel)
     self.vehicleTableView.setModel(self.vehicleModel)
     
-    fk_column_delegate = FkColumnDelegate()
+    self.fk_column_delegate = FkColumnDelegate()
 
-    self.modelTableView.setItemDelegate(fk_column_delegate)
-    self.vehicleTableView.setItemDelegate(fk_column_delegate)
+    self.modelTableView.setItemDelegate(self.fk_column_delegate)
+    self.vehicleTableView.setItemDelegate(self.fk_column_delegate)
 
     self.modelAddBtn.clicked.connect(self.modelModel.appendRow)
     self.vehicleAddBtn.clicked.connect(self.vehicleModel.appendRow)
@@ -64,6 +64,10 @@ class MainWindow(QMainWindow, Ui_Interface):
     self.vehicleClearBtn.clicked.connect(self.vehicleModel.reset)
     self.modelSaveBtn.clicked.connect(self.modelModel.save)
     self.vehicleSaveBtn.clicked.connect(self.vehicleModel.save)
+
+    # for r in range(self.vehicleModel.rowCount(None)):
+    #   res = self.vehicleTableView.openPersistentEditor(self.vehicleModel.index(r, 2))
+    #   res = self.vehicleTableView.openPersistentEditor(self.vehicleModel.index(r, 4))
    
     # self.modelModel.modelReset.connect(
     #   self.modelTableView.resizeColumnsToContents)
