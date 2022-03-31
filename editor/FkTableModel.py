@@ -25,15 +25,19 @@ class ForeignKeySpecification:
     self, 
     reference_table: str, 
     join_on: str, 
+    foreign_column_name: str,
     display_columns: List[str],
     display_format: str = "{0}",
-    auxiliary_columns: List[AuxiliaryColumn] = []
+    auxiliary_columns: List[AuxiliaryColumn] = [],
+    additional_joins: List[str] = [],
   ) -> None:
     self.reference_table = reference_table
+    self.foreign_column_name = foreign_column_name
     self.join_on = join_on
     self.display_columns = display_columns
     self.display_format = display_format
     self.auxiliary_columns = auxiliary_columns
+    self.additional_joins = additional_joins
 
 
 class DeleteButtonColumn:
@@ -73,14 +77,18 @@ class FkTableModel(QAbstractTableModel):
     self.onError = onError
     self.clearError = clearError
     self._query_rows = []
-    self._joins = set()
+    self._joins = []
     self._query_rows_to_schema = []
     for i, col in enumerate(self._schema):
       if not col.isDeleteBtn:
         self._query_rows.append(col.column_name)
         self._query_rows_to_schema.append(i)
       if col.is_fk():
-        self._joins.add(f"LEFT JOIN {col.fk_options.reference_table} ON {col.fk_options.join_on}")
+        join = f"LEFT JOIN {col.fk_options.reference_table} ON {col.fk_options.join_on}"
+        if join not in self._joins:
+          self._joins.append(join)
+        for join in col.fk_options.additional_joins:
+          self._joins.append(join)
         for display_column in col.fk_options.display_columns:
           self._query_rows.append(display_column)
           self._query_rows_to_schema.append(i)
@@ -145,10 +153,13 @@ class FkTableModel(QAbstractTableModel):
       old = deepcopy(self._local_data[r][c])
     
     schema_column_index, _ = self._displayed_columns_to_schema[c]
+    isFk = self._schema[schema_column_index].is_fk()
     if self._schema[schema_column_index].isDeleteBtn:
       self._changed_row[r] ^= ChangedState.DELETED
-    else: 
+    elif isFk:
       self._local_data[r][schema_column_index] = value
+    else: 
+      self._local_data[r][schema_column_index][0] = value
     
     if (old is None or old != value) and not self._schema[schema_column_index].isDeleteBtn:
       self._changed[r][c] |= ChangedState.UPDATED 
@@ -165,9 +176,7 @@ class FkTableModel(QAbstractTableModel):
     return len(self._local_data)
 
   def columnCount(self, parent) -> int:
-    if len(self._local_data):
-      return len(self._displayed_columns_to_schema)
-    return 0
+    return len(self._displayed_columns_to_schema)
 
   def reset(self) -> None:
     self.beginResetModel()
@@ -185,7 +194,7 @@ class FkTableModel(QAbstractTableModel):
     col_names = []
     col_values = []
     for i, c in enumerate(row):
-      if i == 0:
+      if i == 0 or self._schema[i].isDeleteBtn:
         continue # id row not set
       col_names.append(strip_table_name(self._schema[i].column_name))
       col_values.append(c[0])

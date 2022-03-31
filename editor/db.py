@@ -21,8 +21,7 @@ logger = logging.getLogger(__name__)
 connection: Optional[sqlite3.Connection] = None
 
 
-# The special path name :memory: can be provided to create a temporary database 
-# in RAM.
+# The special path name :memory: can be provided to create a temporary database in RAM.
 def connect_to_db() -> sqlite3.Connection:
   global connection
   if (connection is None):
@@ -126,23 +125,52 @@ class VehicleTable(BaseTable):
       'FOREIGN KEY(model_id) REFERENCES model(model_id)'
     ]
 
-
-def main():
-  try:
-    connect_to_db()
-    model = ModelTable()
-    vehicle = VehicleTable()
-
-    for row in query("""
-      SELECT v.vehicle_id, v.label, m.label AS model, m.speed 
-      FROM vehicle v 
-      JOIN model m ON m.model_id = v.model_id;
-    """):
-      print(row)
-    
-  finally:
-    close_db_connection()
+class HubTable(BaseTable):
+  def table_name(self) -> str:
+    return 'hub' 
+  
+  def _columns(self) -> List[ColumnDefinition]:
+    return [
+      ColumnDefinition('hub_id', 'INTEGER', ['PRIMARY KEY']),
+      ColumnDefinition('label', 'TEXT', []),
+      ColumnDefinition('posX', 'FLOAT', ['NOT NULL']),
+      ColumnDefinition('posY', 'FLOAT', ['NOT NULL']),
+    ]
 
 
-if __name__ == '__main__':
-  main()
+class PathTable(BaseTable):
+  def table_name(self) -> str:
+    return 'path' 
+  
+  def _columns(self) -> List[ColumnDefinition]:
+    return [
+      ColumnDefinition('path_id', 'INTEGER', ['PRIMARY KEY']),
+      ColumnDefinition('start_hub_id', 'INTEGER', ['NOT NULL']),
+      ColumnDefinition('end_hub_id', 'INTEGER', ['NOT NULL']),
+    ]
+
+  def _ddl_clauses(self) -> List[str]:
+    return [
+      'FOREIGN KEY(start_hub_id) REFERENCES hub(hub_id)',
+      'FOREIGN KEY(end_hub_id) REFERENCES hub(hub_id)'
+    ]
+
+
+class MovementTable(BaseTable):
+  def table_name(self) -> str:
+    return 'movement' 
+  
+  def _columns(self) -> List[ColumnDefinition]:
+    return [
+      ColumnDefinition('movement_id', 'INTEGER', ['PRIMARY KEY']),
+      ColumnDefinition('timestamp', 'BIGINT', ['NOT NULL']),
+      ColumnDefinition('vehicle_id', 'INTEGER', ['NOT NULL']),
+      ColumnDefinition('path_id', 'INTEGER', ['NOT NULL']),
+    ]
+
+  def _ddl_clauses(self) -> List[str]:
+    return [
+      'FOREIGN KEY(vehicle_id) REFERENCES vehicle(vehicle_id)',
+      'FOREIGN KEY(path_id) REFERENCES path(path_id)',
+    ]
+

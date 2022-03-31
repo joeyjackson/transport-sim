@@ -14,7 +14,6 @@ class DeleteButtonDelegate(QStyledItemDelegate):
     data = index.data(Qt.EditRole)
     if isinstance(data, DeleteButtonColumn):
       btn = QPushButton("Delete", parent)
-      #self.connect(combo, QtCore.SIGNAL("currentIndexChanged(int)"), self, QtCore.SLOT("currentIndexChanged()"))
       btn.clicked.connect(self.currentIndexChanged)
       return btn
     else:
@@ -61,8 +60,8 @@ class FkColumnDelegate(DeleteButtonDelegate):
   def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex) -> QWidget:
     data = index.data(Qt.EditRole)
     if isinstance(data, FkTableModelColumn):
-      to_query = [data.schema.column_name] + data.schema.fk_options.display_columns + [x.column_name for x in data.schema.fk_options.auxiliary_columns]
-      query_results = query(f"""SELECT {", ".join(to_query)} FROM {data.schema.fk_options.reference_table} ORDER BY {data.schema.column_name};""")
+      to_query = [data.schema.fk_options.foreign_column_name] + data.schema.fk_options.display_columns + [x.column_name for x in data.schema.fk_options.auxiliary_columns]
+      query_results = query(f"""SELECT {", ".join(to_query)} FROM {data.schema.fk_options.reference_table}{"".join([" " + j for j in data.schema.fk_options.additional_joins])} ORDER BY {data.schema.fk_options.foreign_column_name};""")
       options = [list(row) for row in query_results]
 
       editor = FkColumnDelegateComboBox(options, data.schema, parent)
