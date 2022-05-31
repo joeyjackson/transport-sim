@@ -35,6 +35,7 @@ services:
       PGADMIN_DEFAULT_PASSWORD: "${PGADMIN_DEFAULT_PASSWORD}"
     volumes:
       - pgadmin-data:/var/lib/pgadmin
+      - ${PWD}/servers.json:/pgadmin4/servers.json
 
 volumes:
   pg-data:

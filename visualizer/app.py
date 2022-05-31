@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, url_for, send_file
 import os
 import psycopg2
 
@@ -12,9 +12,13 @@ def get_db_connection():
 
 app = Flask(__name__)
 
+@app.route("/marco")
+def marco_polo():
+  return "polo"
+
 @app.route("/hello")
 def hello_world():
-  return "<p>Hello, World!</p>"
+  return send_file('static/html/hello.html')
 
 @app.route('/')
 def index():

@@ -1,0 +1,14 @@
+{
+  "Servers": {
+    "db": {
+      "Comment": "Example to prepopulate servers into pgadmin - https://www.pgadmin.org/docs/pgadmin4/latest/import_export_servers.html#json-format",
+      "Group": "Servers",
+      "Name": "db",
+      "Port": 5432,
+      "Host": "db",
+      "SSLMode": "prefer",
+      "Username": "postgres",
+      "MaintenanceDB": "postgres"
+    }
+  }
+}
