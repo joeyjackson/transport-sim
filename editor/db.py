@@ -1,9 +1,13 @@
-import sqlite3
+import psycopg2
+from psycopg2.extensions import connection as pg_connection, cursor as pg_cursor
 import os
 from typing import Iterable, Optional, List
 import logging
 import argparse
 import textwrap
+from dotenv import load_dotenv, find_dotenv
+
+load_dotenv(find_dotenv())
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-log", "--log", 
@@ -18,17 +22,16 @@ logging.basicConfig(level=numeric_level)
 
 logger = logging.getLogger(__name__)
 
-connection: Optional[sqlite3.Connection] = None
+connection: Optional[pg_connection] = None
 
 
-# The special path name :memory: can be provided to create a temporary database in RAM.
-def connect_to_db() -> sqlite3.Connection:
+def connect_to_db() -> pg_connection:
   global connection
   if (connection is None):
-    connection = sqlite3.connect(
-      os.path.join(os.path.dirname(__file__), 'transportation.db')
-      # ':memory:'
-    )
+    connection = psycopg2.connect(host='localhost',
+                                  database=os.getenv('DB_DATABASE'),
+                                  user=os.getenv('DB_USERNAME'),
+                                  password=os.getenv('DB_PASSWORD'))
   return connection
 
 
@@ -39,12 +42,14 @@ def close_db_connection() -> None:
     connection = None
 
 
-def query(q: str, params: Iterable = []) -> sqlite3.Cursor:
+def query(q: str, params: Iterable = []) -> pg_cursor:
   try:
     connection = connect_to_db()
     _query = textwrap.dedent(q).strip()
     logger.debug('Executing query: %s %s', _query, params)
-    return connection.execute(_query, params)
+    cur = connection.cursor()
+    cur.execute(_query, params)
+    return cur
   except Exception as e:
     raise Exception('Error executing query: {} {}\ncaused by: {}'.format(q, params, e)) from e
 
@@ -84,7 +89,9 @@ class BaseTable():
     connection = connect_to_db()
     query = self._schema()
     logger.debug('Executing query: %s', query)
-    connection.execute(query)
+    cur = connection.cursor()
+    cur.execute(query)
+    cur.close()
 
   def __init__(self) -> None:
     self._create_table()
@@ -93,7 +100,9 @@ class BaseTable():
     connection = connect_to_db()
     query = f"""DELETE FROM {self.table_name()};"""
     logger.debug('Executing query: %s', query)
-    connection.execute(query)
+    cur = connection.cursor()
+    cur.execute(query)
+    cur.close()
 
 
 class ModelTable(BaseTable):
@@ -102,7 +111,7 @@ class ModelTable(BaseTable):
 
   def _columns(self) -> List[ColumnDefinition]:
     return [
-      ColumnDefinition('model_id', 'INTEGER', ['PRIMARY KEY']),
+      ColumnDefinition('model_id', 'SERIAL', ['PRIMARY KEY']),
       ColumnDefinition('label', 'TEXT', []),
       ColumnDefinition('type_id', 'INTEGER', ['NOT NULL']),
       ColumnDefinition('speed', 'FLOAT', ['NOT NULL']),
@@ -114,7 +123,7 @@ class VehicleTable(BaseTable):
   
   def _columns(self) -> List[ColumnDefinition]:
     return [
-      ColumnDefinition('vehicle_id', 'INTEGER', ['PRIMARY KEY']),
+      ColumnDefinition('vehicle_id', 'SERIAL', ['PRIMARY KEY']),
       ColumnDefinition('label', 'TEXT', []),
       ColumnDefinition('model_id', 'INTEGER', ['NOT NULL']),
       ColumnDefinition('owner_id', 'INTEGER', []),
@@ -122,7 +131,7 @@ class VehicleTable(BaseTable):
 
   def _ddl_clauses(self) -> List[str]:
     return [
-      'FOREIGN KEY(model_id) REFERENCES model(model_id)'
+      'CONSTRAINT fk_vehicle_model FOREIGN KEY(model_id) REFERENCES model(model_id)'
     ]
 
 class HubTable(BaseTable):
@@ -131,7 +140,7 @@ class HubTable(BaseTable):
   
   def _columns(self) -> List[ColumnDefinition]:
     return [
-      ColumnDefinition('hub_id', 'INTEGER', ['PRIMARY KEY']),
+      ColumnDefinition('hub_id', 'SERIAL', ['PRIMARY KEY']),
       ColumnDefinition('label', 'TEXT', []),
       ColumnDefinition('posX', 'FLOAT', ['NOT NULL']),
       ColumnDefinition('posY', 'FLOAT', ['NOT NULL']),
@@ -144,15 +153,15 @@ class PathTable(BaseTable):
   
   def _columns(self) -> List[ColumnDefinition]:
     return [
-      ColumnDefinition('path_id', 'INTEGER', ['PRIMARY KEY']),
+      ColumnDefinition('path_id', 'SERIAL', ['PRIMARY KEY']),
       ColumnDefinition('start_hub_id', 'INTEGER', ['NOT NULL']),
       ColumnDefinition('end_hub_id', 'INTEGER', ['NOT NULL']),
     ]
 
   def _ddl_clauses(self) -> List[str]:
     return [
-      'FOREIGN KEY(start_hub_id) REFERENCES hub(hub_id)',
-      'FOREIGN KEY(end_hub_id) REFERENCES hub(hub_id)'
+      'CONSTRAINT fk_path_start_hub FOREIGN KEY(start_hub_id) REFERENCES hub(hub_id)',
+      'CONSTRAINT fk_path_end_hub FOREIGN KEY(end_hub_id) REFERENCES hub(hub_id)'
     ]
 
 
@@ -162,7 +171,7 @@ class MovementTable(BaseTable):
   
   def _columns(self) -> List[ColumnDefinition]:
     return [
-      ColumnDefinition('movement_id', 'INTEGER', ['PRIMARY KEY']),
+      ColumnDefinition('movement_id', 'SERIAL', ['PRIMARY KEY']),
       ColumnDefinition('timestamp', 'BIGINT', ['NOT NULL']),
       ColumnDefinition('vehicle_id', 'INTEGER', ['NOT NULL']),
       ColumnDefinition('path_id', 'INTEGER', ['NOT NULL']),
@@ -170,7 +179,7 @@ class MovementTable(BaseTable):
 
   def _ddl_clauses(self) -> List[str]:
     return [
-      'FOREIGN KEY(vehicle_id) REFERENCES vehicle(vehicle_id)',
-      'FOREIGN KEY(path_id) REFERENCES path(path_id)',
+      'CONSTRAINT fk_movement_vehicle FOREIGN KEY(vehicle_id) REFERENCES vehicle(vehicle_id)',
+      'CONSTRAINT fk_movement_path FOREIGN KEY(path_id) REFERENCES path(path_id)',
     ]
 

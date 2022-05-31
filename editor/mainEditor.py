@@ -1,4 +1,5 @@
 import sys
+import os
 from PyQt5 import uic
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QMainWindow, QStyleFactory, QGridLayout, QPushButton, QTableView, QWidget, QHeaderView
@@ -9,7 +10,7 @@ from FkColumnDelegate import FkColumnDelegate
 QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)  # enable highdpi scaling
 QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)  # use highdpi icons
 
-Ui_Interface, _ = uic.loadUiType('mainEditor.ui')
+Ui_Interface, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'ui/mainEditor.ui'))
 
 class MainWindow(QMainWindow, Ui_Interface):
   def __init__(self, parent=None):

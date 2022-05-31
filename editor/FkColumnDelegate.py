@@ -61,11 +61,10 @@ class FkColumnDelegate(DeleteButtonDelegate):
     data = index.data(Qt.EditRole)
     if isinstance(data, FkTableModelColumn):
       to_query = [data.schema.fk_options.foreign_column_name] + data.schema.fk_options.display_columns + [x.column_name for x in data.schema.fk_options.auxiliary_columns]
-      query_results = query(f"""SELECT {", ".join(to_query)} FROM {data.schema.fk_options.reference_table}{"".join([" " + j for j in data.schema.fk_options.additional_joins])} ORDER BY {data.schema.fk_options.foreign_column_name};""")
-      options = [list(row) for row in query_results]
-
-      editor = FkColumnDelegateComboBox(options, data.schema, parent)
-      return editor
+      with query(f"""SELECT {", ".join(to_query)} FROM {data.schema.fk_options.reference_table}{"".join([" " + j for j in data.schema.fk_options.additional_joins])} ORDER BY {data.schema.fk_options.foreign_column_name};""") as results:
+        options = [list(row) for row in results]
+        editor = FkColumnDelegateComboBox(options, data.schema, parent)
+        return editor
     else:
       return super(FkColumnDelegate, self).createEditor(parent, option, index)
 

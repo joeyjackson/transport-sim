@@ -1,3 +1,4 @@
+import imp
 from PyQt5.QtCore import (
   Qt, 
   QAbstractTableModel, 
@@ -115,22 +116,23 @@ class FkTableModel(QAbstractTableModel):
   def _make_query(self):
     self.beginResetModel()
     self._local_data = []
-    for row in query(f"""SELECT {", ".join(self._query_rows)} FROM {self.table_name}{"".join([" " + j for j in self._joins])};"""):
-      row_result = []
+    with query(f"""SELECT {", ".join(self._query_rows)} FROM {self.table_name}{"".join([" " + j for j in self._joins])};""") as results:
+      for row in results:
+        row_result = []
 
-      curr_schema_col = 0
-      col_results = []
-      for i, column in enumerate(row):
-        schema_column_index = self._query_rows_to_schema[i]
-        if curr_schema_col == schema_column_index:
-          col_results.append(column)
-        else:
-          row_result.append(col_results)
-          curr_schema_col += 1
-          col_results = [column]
-      row_result.append(col_results)
-      row_result.append([DeleteButtonColumn()])
-      self._local_data.append(row_result)
+        curr_schema_col = 0
+        col_results = []
+        for i, column in enumerate(row):
+          schema_column_index = self._query_rows_to_schema[i]
+          if curr_schema_col == schema_column_index:
+            col_results.append(column)
+          else:
+            row_result.append(col_results)
+            curr_schema_col += 1
+            col_results = [column]
+        row_result.append(col_results)
+        row_result.append([DeleteButtonColumn()])
+        self._local_data.append(row_result)
     self.endResetModel()
 
   def _resetChanged(self):
@@ -188,7 +190,7 @@ class FkTableModel(QAbstractTableModel):
   def _delete_statement_for_row(self, row: List[List[Union[str, float, int]]]) -> Tuple[str, List[List[Union[str, float, int]]]]:
     id_name = self._schema[0].column_name
     id_value = row[0][0]
-    return f"""DELETE FROM {self.table_name} WHERE {id_name} = ?;""", [id_value]
+    return f"""DELETE FROM {self.table_name} WHERE {id_name} = %s;""", [id_value]
 
   def _insert_statement_for_row(self, row: List[List[Union[str, float, int]]]) -> Tuple[str, List[List[Union[str, float, int]]]]:
     col_names = []
@@ -198,7 +200,7 @@ class FkTableModel(QAbstractTableModel):
         continue # id row not set
       col_names.append(strip_table_name(self._schema[i].column_name))
       col_values.append(c[0])
-    return f"""INSERT INTO {self.table_name} ({", ".join(col_names)}) VALUES({', '.join(['?' for _ in col_names])});""", col_values
+    return f"""INSERT INTO {self.table_name} ({", ".join(col_names)}) VALUES({', '.join(['%s' for _ in col_names])});""", col_values
 
   def _update_statement_for_row(self, row: List[List[Union[str, float, int]]], changed_row: List[int]) -> Tuple[str, List[List[Union[str, float, int]]]]:
     col_names = []
@@ -209,7 +211,7 @@ class FkTableModel(QAbstractTableModel):
       if changed_row[i] & ChangedState.UPDATED:
         col_names.append(strip_table_name(self._schema[i].column_name))
         col_values.append(c[0])
-    return f"""UPDATE {self.table_name} SET {", ".join([cn + ' = ?' for cn in col_names])} WHERE {id_name} = ?;""", col_values + [id_value]
+    return f"""UPDATE {self.table_name} SET {", ".join([cn + ' = %s' for cn in col_names])} WHERE {id_name} = %s;""", col_values + [id_value]
 
   def _flush_changes(self) -> None:
     statements = []
@@ -223,9 +225,10 @@ class FkTableModel(QAbstractTableModel):
       if self._changed_row[i] & ChangedState.UPDATED:
         statements.append(self._update_statement_for_row(row, self._changed[i]))
 
-    conn = connect_to_db()
     for sql, fields in statements:
       query(sql, fields)
+    
+    conn = connect_to_db()
     conn.commit()
 
   def save(self) -> None:
