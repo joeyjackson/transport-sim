@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>{% block title %} Test {% endblock %}</h1>
+    {% for result in results %}
+        <div class='result'>
+            <h3>{{ result[0] }} + {{ result[1] }} = {{ result[2] }}</h3>
+        </div>
+    {% endfor %}
+{% endblock %}
