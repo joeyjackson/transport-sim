@@ -1,33 +1,73 @@
-from flask import Flask, render_template, url_for, send_file
+from flask import Flask, render_template
 import os
+from typing import Optional
 import psycopg2
+from psycopg2.extensions import connection as pg_connection
 
-def get_db_connection():
-  conn = psycopg2.connect(host=os.getenv('DB_HOST', 'localhost'),
+connection: Optional[pg_connection] = None
+app = Flask(__name__)
+
+
+def connect_to_db() -> pg_connection:
+  global connection
+  if (connection is None):
+    connection = psycopg2.connect(host=os.getenv('DB_HOST', 'localhost'),
                           database=os.getenv('DB_DATABASE', 'postgres'),
                           user=os.getenv('DB_USERNAME', 'postgres'),
                           password=os.getenv('DB_PASSWORD'))
-  return conn
+  return connection
+  
 
-app = Flask(__name__)
+def close_db_connection() -> None:
+  global connection
+  if (connection is not None):
+    connection.close()
+    connection = None
 
-@app.route("/marco")
-def marco_polo():
-  return "polo"
 
-@app.route("/hello")
-def hello_world():
-  return send_file('static/html/hello.html')
+def query(query_str):
+  conn = connect_to_db()
+  cur = conn.cursor()
+  cur.execute(query_str)
+  results = cur.fetchall()
+  cur.close()
+  return results
+
+
+def get_models():
+  return query('SELECT model_id, label, type_id, speed FROM model;')
+
+
+def get_vehicles():
+  return query('SELECT vehicle_id, label, model_id, owner_id FROM vehicle;')
+
+
+def get_hubs():
+  return query('SELECT hub_id, label, posX, posY FROM hub;')
+
+
+def get_paths():
+  return query('SELECT path_id, start_hub_id, end_hub_id FROM path;')
+
+
+def get_movements():
+  return query('SELECT movement_id, timestamp, vehicle_id, path_id FROM movement;')
+
 
 @app.route('/')
 def index():
-  conn = get_db_connection()
-  cur = conn.cursor()
-  cur.execute('SELECT value1, value2, add, sub, mult, div, pow FROM math_facts;')
-  results = cur.fetchall()
-  cur.close()
-  conn.close()
-  return render_template('index.html', results=results)
+  return render_template(
+    'index.html', 
+    models=get_models(), 
+    vehicles=get_vehicles(), 
+    hubs=get_hubs(), 
+    paths=get_paths(), 
+    movements=get_movements()
+  )
+
 
 if __name__ == "__main__":
-  app.run(debug=True)
+  try:
+    app.run(debug=True)
+  finally:
+    close_db_connection()

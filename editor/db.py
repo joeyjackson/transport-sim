@@ -104,6 +104,7 @@ class BaseTable():
     cur.execute(query)
     cur.close()
 
+# NOTE: Keep up to date with schemas in db/setup.sql
 
 class ModelTable(BaseTable):
   def table_name(self) -> str:

@@ -1,10 +1,40 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <h1>{% block title %} Test {% endblock %}</h1>
-    {% for result in results %}
-        <div class='result'>
-            <h3>{{ result[0] }} + {{ result[1] }} = {{ result[2] }}</h3>
-        </div>
-    {% endfor %}
+  <h3>{% block title %} Transportation Simulator {% endblock %}</h3>
+  <hr>
+  <h5>Models</h5>
+  {% for result in models %}
+    <div class='models'>
+      <h6>{{ result[0] }} {{ result[1] }} {{ result[2] }} {{ result[3] }}</h6>
+    </div>
+  {% endfor %}
+  <hr>
+  <h5>Vehicles</h5>
+  {% for result in vehicles %}
+    <div class='vehicles'>
+      <h6>{{ result[0] }} {{ result[1] }} {{ result[2] }} {{ result[3] }}</h6>
+    </div>
+  {% endfor %}
+  <hr>
+  <h5>Hubs</h5>
+  {% for result in hubs %}
+    <div class='hubs'>
+      <h6>{{ result[0] }} {{ result[1] }} {{ result[2] }} {{ result[3] }}</h6>
+    </div>
+  {% endfor %}
+  <hr>
+  <h5>Paths</h5>
+  {% for result in paths %}
+    <div class='paths'>
+      <h6>{{ result[0] }} {{ result[1] }} {{ result[2] }}</h6>
+    </div>
+  {% endfor %}
+  <hr>
+  <h5>Movements</h5>
+  {% for result in movements %}
+    <div class='movements'>
+      <h6>{{ result[0] }} {{ result[1] }} {{ result[2] }} {{ result[3] }}</h6>
+    </div>
+  {% endfor %}
 {% endblock %}
