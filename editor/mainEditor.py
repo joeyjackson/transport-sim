@@ -88,7 +88,7 @@ class MainWindow(QMainWindow, Ui_Interface):
         table_name=MovementTable().table_name(),
         schema=[
           DisplaySchemaColumn(column_name="movement.movement_id", header="id", default_value=None),
-          DisplaySchemaColumn(column_name="movement.timestamp", header="timestamp", default_value=0),
+          DisplaySchemaColumn(column_name="movement.ts", header="timestamp", default_value=0),
           DisplaySchemaColumn(column_name="movement.vehicle_id", header="vehicle", default_value=0,
             fk_options=ForeignKeySpecification(
               reference_table="vehicle", 

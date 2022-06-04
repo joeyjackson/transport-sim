@@ -1,8 +1,9 @@
 from flask import Flask, render_template
 import os
-from typing import Optional
+from typing import Optional, List, Tuple
 import psycopg2
 from psycopg2.extensions import connection as pg_connection
+from textwrap import dedent
 
 connection: Optional[pg_connection] = None
 app = Flask(__name__)
@@ -25,7 +26,7 @@ def close_db_connection() -> None:
     connection = None
 
 
-def query(query_str):
+def query(query_str) -> List[Tuple]:
   conn = connect_to_db()
   cur = conn.cursor()
   cur.execute(query_str)
@@ -51,19 +52,54 @@ def get_paths():
 
 
 def get_movements():
-  return query('SELECT movement_id, timestamp, vehicle_id, path_id FROM movement;')
+  return query('SELECT movement_id, ts, vehicle_id, path_id FROM movement;')
+
+def get_movements_with_arrival_info():
+  return query(dedent('''
+    SELECT 
+      m.ts, 
+      v.label, 
+      mdl.speed,
+      shub.posX AS startX, 
+      shub.posY AS startX, 
+      ehub.posX AS endX, 
+      ehub.posY AS endY, 
+      m.path_time
+    FROM movement_with_arrival m
+    JOIN vehicle v ON m.vehicle_id = v.vehicle_id
+    JOIN path p ON m.path_id = p.path_id
+    JOIN hub shub ON p.start_hub_id = shub.hub_id
+    JOIN hub ehub ON p.end_hub_id = ehub.hub_id
+    JOIN model mdl on v.model_id = mdl.model_id;
+  '''))
 
 
 @app.route('/')
 def index():
-  return render_template(
-    'index.html', 
-    models=get_models(), 
-    vehicles=get_vehicles(), 
-    hubs=get_hubs(), 
-    paths=get_paths(), 
-    movements=get_movements()
-  )
+  return render_template('index.html')
+
+
+@app.route('/api/movements')
+def movements():
+  return {
+    "data": [
+      {
+        "timestamp": result[0], 
+        "vehicle": result[1], 
+        "speed": result[2], 
+        "startPos": {
+          "x": result[3], 
+          "y": result[4], 
+        },
+        "endPos": {
+          "x": result[5], 
+          "y": result[6], 
+        },
+        "path_time": result[7],
+      } 
+      for result in get_movements_with_arrival_info()
+    ]
+  }
 
 
 if __name__ == "__main__":

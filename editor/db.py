@@ -173,7 +173,7 @@ class MovementTable(BaseTable):
   def _columns(self) -> List[ColumnDefinition]:
     return [
       ColumnDefinition('movement_id', 'SERIAL', ['PRIMARY KEY']),
-      ColumnDefinition('timestamp', 'BIGINT', ['NOT NULL']),
+      ColumnDefinition('ts', 'BIGINT', ['NOT NULL']),
       ColumnDefinition('vehicle_id', 'INTEGER', ['NOT NULL']),
       ColumnDefinition('path_id', 'INTEGER', ['NOT NULL']),
     ]
