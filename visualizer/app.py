@@ -101,6 +101,22 @@ def movements():
     ]
   }
 
+@app.route('/api/hubs')
+def hubs():
+  return {
+    "data": [
+      {
+        "hub_id": result[0],
+        "label": result[1], 
+        "pos": {
+          "x": result[2], 
+          "y": result[3]
+        }
+      }
+      for result in get_hubs()
+    ]
+  }
+
 
 if __name__ == "__main__":
   try:

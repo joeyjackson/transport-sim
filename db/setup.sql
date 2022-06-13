@@ -160,32 +160,32 @@ $$;
 
 
 -----------------------------------------------------------------------
-INSERT INTO model (model_id, label, type_id, speed) 
+INSERT INTO model (label, type_id, speed) 
 VALUES 
-  (0, 'slow', 0, 1),
-  (1, 'medium', 0, 5),
-  (2, 'fast', 0, 10);
+  ('slow', 0, 10),     -- model_id=1
+  ('medium', 0, 50),   -- model_id=2
+  ('fast', 0, 100);    -- model_id=3
 
-INSERT INTO vehicle(vehicle_id, label, model_id, owner_id)
+INSERT INTO vehicle(label, model_id, owner_id)
 VALUES
-  (0, 'vehicle1', 0, 0),
-  (1, 'vehicle2', 1, 0),
-  (2, 'vehicle3', 1, 0),
-  (3, 'vehicle4', 2, 0);
+  ('vehicle1', 1, 0),   -- vehicle_id=1
+  ('vehicle2', 2, 0),   -- vehicle_id=2
+  ('vehicle3', 2, 0),   -- vehicle_id=3
+  ('vehicle4', 3, 0);   -- vehicle_id=4
 
-INSERT INTO hub(hub_id, label, posX, posY)
+INSERT INTO hub(label, posX, posY)
 VALUES
-  (0, 'hub1', 0, 0),
-  (1, 'hub2', 1, 1);
+  ('hub1', 0, 0),       -- hub_id=1
+  ('hub2', 100, 100);   -- hub_id=2
 
-INSERT INTO path(path_id, start_hub_id, end_hub_id)
+INSERT INTO path(start_hub_id, end_hub_id)
 VALUES
-  (0, 0, 1),
-  (1, 1, 0);
+  (1, 2),   -- path_id=1
+  (2, 1);   -- path_id=2
 
-INSERT INTO movement(movement_id, ts, vehicle_id, path_id)
+INSERT INTO movement(ts, vehicle_id, path_id)
 VALUES
-  (0, 0, 0, 0),
-  (1, 4, 0, 1),
-  (2, 2, 1, 0),
-  (3, 4, 2, 0);
+  (0, 1, 1),  -- movement_id=1
+  (15, 1, 2), -- movement_id=2
+  (2, 2, 1),  -- movement_id=3
+  (4, 3, 1);  -- movement_id=4
