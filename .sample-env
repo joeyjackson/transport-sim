@@ -1,6 +1,8 @@
-VISUALIZER_APP_PORT=
 DB_PASSWORD=mysecretpassword
 DB_USERNAME=postgres
 DB_DATABASE=postgres
 PGADMIN_DEFAULT_EMAIL=user@domain.com
 PGADMIN_DEFAULT_PASSWORD=mysecretpassword
+APP_PORT=
+APP_DB_USER=app
+APP_DB_PASSWORD=myothersecretpassword

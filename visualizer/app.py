@@ -14,8 +14,8 @@ def connect_to_db() -> pg_connection:
   if (connection is None):
     connection = psycopg2.connect(host=os.getenv('DB_HOST', 'localhost'),
                           database=os.getenv('DB_DATABASE', 'postgres'),
-                          user=os.getenv('DB_USERNAME', 'postgres'),
-                          password=os.getenv('DB_PASSWORD'))
+                          user=os.getenv('APP_DB_USER', 'app'),
+                          password=os.getenv('APP_DB_PASSWORD'))
   return connection
   
 
@@ -27,12 +27,16 @@ def close_db_connection() -> None:
 
 
 def query(query_str) -> List[Tuple]:
-  conn = connect_to_db()
-  cur = conn.cursor()
-  cur.execute(query_str)
-  results = cur.fetchall()
-  cur.close()
-  return results
+  try:
+    conn = connect_to_db()
+    cur = conn.cursor()
+    cur.execute(query_str)
+    results = cur.fetchall()
+    cur.close()
+    return results
+  except Exception as e:
+    close_db_connection()
+    raise e
 
 
 def get_models():
@@ -53,6 +57,7 @@ def get_paths():
 
 def get_movements():
   return query('SELECT movement_id, ts, vehicle_id, path_id FROM movement;')
+
 
 def get_movements_with_arrival_info():
   return query(dedent('''

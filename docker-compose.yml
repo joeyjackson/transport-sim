@@ -4,12 +4,12 @@ services:
     restart: unless-stopped
     build: visualizer/.
     ports:
-      - "${VISUALIZER_APP_PORT:-5000}:5000"
+      - "${APP_PORT:-5000}:5000"
     environment:
       DB_HOST: db
-      DB_USERNAME: "${DB_USERNAME}"
       DB_DATABASE: "${DB_DATABASE}"
-      DB_PASSWORD: "${DB_PASSWORD}"
+      APP_DB_PASSWORD: "${APP_DB_PASSWORD}"
+      APP_DB_USER: "${APP_DB_USER}"
     depends_on:
       - db
   db:
@@ -19,8 +19,10 @@ services:
      - "5432:5432" # FOR EDITOR APP - SHOULD BE ACCESSIBLE TO OTHER CONTAINERS WITHIN NETWORK
     environment: 
       POSTGRES_USER: "${DB_USERNAME}"
-      POSTGRES_DB:  "${DB_DATABASE}"
+      POSTGRES_DB: "${DB_DATABASE}"
       POSTGRES_PASSWORD: "${DB_PASSWORD}"
+      APP_DB_PASSWORD: "${APP_DB_PASSWORD}"
+      APP_DB_USER: "${APP_DB_USER}"
       PGDATA: /var/lib/postgresql/data
     volumes:
       - pg-data:/var/lib/postgresql/data
