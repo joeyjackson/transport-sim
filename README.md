@@ -4,8 +4,9 @@ Toy application for simulating and visualizing a transportation network. Persist
 
 ### Start the Database and Visualizer
 ```
-$ docker-compose up -d
+$ docker-compose up -d --build
 ```
+The simulation visualizer can be viewed in a browser at http://localhost:5000.
 
 ### Run the editor application
 ```
