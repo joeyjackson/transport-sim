@@ -59,6 +59,10 @@ def get_movements():
   return query('SELECT movement_id, ts, vehicle_id, path_id FROM movement;')
 
 
+def get_inconsistencies():
+  return query('SELECT movement_id, vehicle_id, ts, inconsistency_type FROM movement_inconsistencies;')
+
+
 def get_movements_with_arrival_info():
   return query(dedent('''
     SELECT 
@@ -69,7 +73,8 @@ def get_movements_with_arrival_info():
       shub.posY AS startX, 
       ehub.posX AS endX, 
       ehub.posY AS endY, 
-      m.path_time
+      m.path_time,
+      v.vehicle_id
     FROM movement_with_arrival m
     JOIN vehicle v ON m.vehicle_id = v.vehicle_id
     JOIN path p ON m.path_id = p.path_id
@@ -91,6 +96,7 @@ def movements():
       {
         "timestamp": result[0], 
         "vehicle": result[1], 
+        "vehicle_id": result[8], 
         "speed": result[2], 
         "startPos": {
           "x": result[3], 
@@ -119,6 +125,20 @@ def hubs():
         }
       }
       for result in get_hubs()
+    ]
+  }
+
+@app.route('/api/inconsistencies')
+def inconsistencies():
+  return {
+    "data": [
+      {
+        "movement_id": result[0],
+        "vehicle_id": result[1], 
+        "timestamp": result[2],
+        "inconsistency_type": result[3]
+      }
+      for result in get_inconsistencies()
     ]
   }
 
