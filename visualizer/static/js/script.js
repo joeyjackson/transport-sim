@@ -102,9 +102,9 @@ function handleHubsData(data) {
 
 function handleMovData(data) {
   // Color vehicles based on their vehicle_id
-  const colorRange = d3.scaleLinear()
+  const colorRange = d3.scaleOrdinal()
     .domain(d3.extent(data.map(d => d.vehicle_id)))
-    .range(["yellow", "blue"]);
+    .range(d3.schemeSet3);
 
   // Cancel any pending transitions
   vehiclesGroup.selectAll(".vehicle").interrupt();
