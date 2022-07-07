@@ -221,15 +221,20 @@ AS $$
 BEGIN
   INSERT INTO model (label, type_id, speed) 
   VALUES 
-    ('slow', 0, 10),     -- model_id=1
-    ('medium', 0, 50),   -- model_id=2
-    ('fast', 0, 100);    -- model_id=3
+    ('slow', 0, 15),    -- model_id=1
+    ('medium', 0, 20),  -- model_id=2
+    ('fast', 0, 25);    -- model_id=3
 
   INSERT INTO vehicle(model_id, owner_id)
   VALUES
     (1, 0),   -- vehicle_id=1
     (2, 0),   -- vehicle_id=2
-    (2, 0);   -- vehicle_id=3
+    (2, 0),   -- vehicle_id=3
+    (2, 0),   -- vehicle_id=4
+    (2, 0),   -- vehicle_id=5
+    (2, 0),   -- vehicle_id=6
+    (3, 0),   -- vehicle_id=7
+    (3, 0);   -- vehicle_id=8
 
   INSERT INTO vehicle(label, model_id, owner_id)
   VALUES
@@ -238,19 +243,130 @@ BEGIN
   INSERT INTO hub(label, posX, posY)
   VALUES
     ('hub1', 0, 0),       -- hub_id=1
-    ('hub2', 100, 100);   -- hub_id=2
+    ('hub2', 315, 175),   -- hub_id=2
+    ('hub3', 665, 165),   -- hub_id=3
+    ('hub4', 760, 25),    -- hub_id=4
+    ('hub5', 825, 55),    -- hub_id=5
+    ('hub6', 210, 300),   -- hub_id=6
+    ('hub7', 85, 390),    -- hub_id=7
+    ('hub8', 150, 455),   -- hub_id=8
+    ('hub9', 215, 385),   -- hub_id=9
+    ('hub10', 405, 450),  -- hub_id=10
+    ('hub11', 440, 395),  -- hub_id=11
+    ('hub12', 640, 440),  -- hub_id=12
+    ('hub13', 640, 500),  -- hub_id=13
+    ('hub14', 790, 515),  -- hub_id=14
+    ('hub15', 865, 395),  -- hub_id=15
+    ('hub16', 1000, 600), -- hub_id=16
+    ('hub17', 950, 415),  -- hub_id=17
+    ('hub18', 900, 50);   -- hub_id=18
 
   INSERT INTO path(start_hub_id, end_hub_id)
   VALUES
     (1, 2),   -- path_id=1
-    (2, 1);   -- path_id=2
+    (2, 1),   -- path_id=2
+    (2, 6),   -- path_id=3
+    (2, 11),  -- path_id=4
+    (2, 3),   -- path_id=5
+    (3, 2),   -- path_id=6
+    (3, 5),   -- path_id=7
+    (3, 12),  -- path_id=8
+    (3, 15),  -- path_id=9
+    (4, 5),   -- path_id=10
+    (5, 3),   -- path_id=11
+    (5, 4),   -- path_id=12
+    (5, 18),  -- path_id=13
+    (6, 2),   -- path_id=14
+    (6, 7),   -- path_id=15
+    (6, 9),   -- path_id=16
+    (7, 6),   -- path_id=17
+    (7, 8),   -- path_id=18
+    (8, 7),   -- path_id=19
+    (8, 9),   -- path_id=20
+    (9, 6),   -- path_id=21
+    (9, 8),   -- path_id=22
+    (10, 11), -- path_id=23
+    (11, 2),  -- path_id=24
+    (11, 10), -- path_id=25
+    (11, 12), -- path_id=26
+    (12, 11), -- path_id=27
+    (12, 13), -- path_id=28
+    (12, 14), -- path_id=29
+    (12, 3),  -- path_id=30
+    (13, 12), -- path_id=31
+    (14, 12), -- path_id=32
+    (15, 3),  -- path_id=33
+    (15, 16), -- path_id=34
+    (15, 17), -- path_id=35
+    (16, 15), -- path_id=36
+    (17, 15), -- path_id=37
+    (18, 5);  -- path_id=38
 
-  INSERT INTO movement(ts, vehicle_id, path_id)
+  INSERT INTO movement(vehicle_id, path_id, ts)
   VALUES
-    (0, 1, 1),  -- movement_id=1
-    (15, 1, 2), -- movement_id=2
-    (2, 2, 1),  -- movement_id=3
-    (4, 3, 1);  -- movement_id=4
+    (1, 1, 0),      -- movement_id=1
+    (1, 4, 37),     -- movement_id=2
+    (1, 25, 63),    -- movement_id=3
+    (1, 23, 70),    -- movement_id=4
+    (1, 24, 77),    -- movement_id=5
+    (1, 2, 103),    -- movement_id=6
+
+    (2, 3, 10),     -- movement_id=7
+    (2, 15, 19+5),  -- movement_id=8
+    (2, 18, 27+10), -- movement_id=9
+    (2, 20, 32+15), -- movement_id=10
+    (2, 21, 37+20), -- movement_id=11
+    (2, 14, 42+25), -- movement_id=12
+
+    (3, 4, 5),      -- movement_id=13
+    (3, 26, 18+10), -- movement_id=14
+    (3, 30, 29+20), -- movement_id=15
+    (3, 6, 43+30),  -- movement_id=16
+
+    (4, 23, 10),    -- movement_id=17
+    (4, 26, 14+5),  -- movement_id=18
+    (4, 28, 25+10), -- movement_id=19
+    (4, 31, 29+15), -- movement_id=20
+    (4, 29, 33+20), -- movement_id=21
+    (4, 32, 42+25), -- movement_id=22
+    (4, 27, 51+30), -- movement_id=23
+    (4, 25, 62+35), -- movement_id=24
+
+    (5, 38, 0),     -- movement_id=25
+    (5, 11, 4+5),   -- movement_id=26
+    (5, 9, 14+10),  -- movement_id=27
+    (5, 34, 30+15), -- movement_id=28
+    (5, 36, 43+20), -- movement_id=29
+    (5, 33, 56+25), -- movement_id=30
+    (5, 7, 80+30),  -- movement_id=31
+    (5, 13, 90+35), -- movement_id=32
+
+    (6, 10, 0),     -- movement_id=33
+    (6, 11, 4),     -- movement_id=34
+    (6, 8, 14),     -- movement_id=35
+    (6, 29, 28+10), -- movement_id=36
+    (6, 32, 37+10), -- movement_id=37
+    (6, 30, 46+10), -- movement_id=38
+    (6, 7, 60+20),  -- movement_id=39
+    (6, 12, 70+20), -- movement_id=40
+
+    (7, 37, 10),    -- movement_id=41
+    (7, 33, 14),    -- movement_id=42
+    (7, 6, 27+5),   -- movement_id=43
+    (7, 2, 42+5),   -- movement_id=44
+    (7, 1, 57+15),  -- movement_id=45
+    (7, 5, 72+15),  -- movement_id=46
+    (7, 9, 88+15),  -- movement_id=47
+    (7, 35, 99+20), -- movement_id=48
+
+    (8, 1, 5),      -- movement_id=49
+    (8, 4, 20),     -- movement_id=50
+    (8, 26, 31),    -- movement_id=51
+    (8, 28, 40),    -- movement_id=51
+    (8, 31, 43+5),  -- movement_id=53
+    (8, 27, 46+5),  -- movement_id=54
+    (8, 24, 55+15), -- movement_id=55
+    (8, 2, 66+15);  -- movement_id=56
 END;
 $$;
 

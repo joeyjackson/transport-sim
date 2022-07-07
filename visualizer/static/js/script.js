@@ -60,9 +60,9 @@ function handleInconsistencyData(data) {
 // ----------------------------------------------------------------------------
 
 const EXTRA_RIGHT_PAD = 20;
-const WIDTH = 300 + EXTRA_RIGHT_PAD;
-const HEIGHT = 300;
-const HUB_RADIUS = 10;
+const WIDTH = 800 + EXTRA_RIGHT_PAD;
+const HEIGHT = 480;
+const HUB_RADIUS = 8;
 const VEHICLE_RADIUS = 5;
 
 canvas
